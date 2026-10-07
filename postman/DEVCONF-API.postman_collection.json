@@ -1,0 +1,134 @@
+{
+  "info": {
+    "name": "DEVCONF 2026 API - спикеры",
+    "description": "Лабораторная работа № 28. CRUD-операции для сущности «Спикер». Запросы идут по порядку: создание сохраняет идентификатор в переменную коллекции speakerId, поэтому следующие запросы работают без ручного копирования.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:5000" },
+    { "key": "speakerId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "1. POST создание спикера",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Код ответа 201', function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "",
+              "const body = pm.response.json();",
+              "if (body.data && body.data._id) {",
+              "    pm.collectionVariables.set('speakerId', body.data._id);",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"name\": \"Екатерина Сидорук\",\n    \"topic\": \"Бэкенд на Express: что ломается при росте нагрузки\",\n    \"photoUrl\": \"/images/speaker-09-1x.webp\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/speakers",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "speakers"]
+        },
+        "description": "Создание записи. Успех: 201 и созданный документ."
+      }
+    },
+    {
+      "name": "2. GET список спикеров",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/speakers",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "speakers"]
+        },
+        "description": "Список всех спикеров. Успех: 200, поля count и data."
+      }
+    },
+    {
+      "name": "3. GET спикер по идентификатору",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/speakers/{{speakerId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "speakers", "{{speakerId}}"]
+        },
+        "description": "Одна запись. Успех: 200. Нет записи: 404."
+      }
+    },
+    {
+      "name": "4. PUT обновление спикера",
+      "request": {
+        "method": "PUT",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"topic\": \"Бэкенд на Express: журналирование и обработка ошибок\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/speakers/{{speakerId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "speakers", "{{speakerId}}"]
+        },
+        "description": "Обновление записи. Передано одно поле, остальные сохраняются. Успех: 200."
+      }
+    },
+    {
+      "name": "5. DELETE удаление спикера",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/speakers/{{speakerId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "speakers", "{{speakerId}}"]
+        },
+        "description": "Удаление записи. Успех: 200 и удалённый документ."
+      }
+    },
+    {
+      "name": "6. POST без обязательного поля, ошибка 400",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"photoUrl\": \"/images/speaker-10-1x.webp\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/speakers",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "speakers"]
+        },
+        "description": "Проверка валидации схемы: не заданы name и topic. Ожидается 400 и перечень полей."
+      }
+    },
+    {
+      "name": "7. GET несуществующий спикер, ошибка 404",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/speakers/656f1f77bcf86cd799439011",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "speakers", "656f1f77bcf86cd799439011"]
+        },
+        "description": "Идентификатор корректного вида, но записи нет. Ожидается 404."
+      }
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "name": "devconf-api",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Лабораторная работа № 28. REST API на Express и MongoDB для сущности «Спикер» лендинга конференции DEVCONF 2026",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "seed": "node scripts/seed.js",
+    "seed:clear": "node scripts/seed.js --clear"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.1",
+    "mongoose": "^8.8.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.7"
+  }
+}
