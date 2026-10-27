@@ -18,47 +18,109 @@
 ## Требования
 
 - Node.js версии 18 или новее
-- MongoDB: локальный сервер либо бесплатный кластер MongoDB Atlas
+- MongoDB: любой из трёх вариантов ниже, проще всего первый
 - Postman или Insomnia для проверки запросов
 
-## Установка и запуск
+Arch Linux:
 
 ```bash
+sudo pacman -S nodejs npm git
+yay -S postman-bin          # клиент Postman из AUR
+```
+
+## Установка
+
+```bash
+git clone https://github.com/karrinkl/devconf-api.git
+cd devconf-api
 npm install
 cp .env.example .env
 ```
 
-В файле `.env` указывается строка подключения к базе:
+## Запуск
+
+### Вариант 1. Одной командой, без установки MongoDB и Docker
+
+```bash
+npm run local
+```
+
+Скрипт `scripts/local.js` поднимает настоящий сервер MongoDB через пакет
+mongodb-memory-server: при первом запуске скачивается официальный
+`mongod` (около 70 МБ, кеш в `~/.cache/mongodb-binaries`), дальше запуск
+занимает пару секунд. Для Arch Linux у MongoDB нет отдельной сборки,
+пакет сам берёт сборку для Ubuntu 22.04, она работает на Arch.
+
+Данные лежат в каталоге `.mongo-data` и сохраняются между запусками.
+Если коллекция пуста, в неё автоматически записываются восемь спикеров.
+В терминале появятся строки:
 
 ```
-PORT=5000
-MONGO_URI=mongodb://127.0.0.1:27017/devconf
+MongoDB работает: mongodb://127.0.0.1:27017/devconf
+В базе уже есть спикеров: 8
+MongoDB подключена: 127.0.0.1, база devconf
+Сервер запущен: http://localhost:5000
 ```
 
-Для облачного кластера строка берётся в MongoDB Atlas, в разделе
-Connect, пункт Drivers:
+Остановка: Ctrl+C.
+
+### Вариант 2. MongoDB в Docker
+
+Arch Linux, один раз:
+
+```bash
+sudo pacman -S docker docker-compose
+sudo systemctl enable --now docker
+sudo usermod -aG docker $USER      # затем перелогиниться
+```
+
+Только база в контейнере, сервер на своей машине:
+
+```bash
+docker compose up -d mongo
+npm run seed
+npm run dev
+```
+
+Или база и сервер вместе в контейнерах:
+
+```bash
+docker compose up -d --build
+docker compose exec api npm run seed
+docker compose logs -f api
+docker compose down
+```
+
+Внутри контейнера строка подключения `mongodb://mongo:27017/devconf`,
+снаружи `mongodb://127.0.0.1:27017/devconf`, её и содержит `.env`.
+
+### Вариант 3. MongoDB Atlas
+
+В файле `.env` строка подключения меняется на строку облачного
+кластера (Atlas, раздел Connect, пункт Drivers):
 
 ```
 MONGO_URI=mongodb+srv://<пользователь>:<пароль>@<кластер>.mongodb.net/devconf?retryWrites=true&w=majority
 ```
 
-Запуск:
+Затем:
 
 ```bash
-npm run dev     # режим разработки, перезапуск при правках
-npm start       # обычный запуск
+npm run seed
+npm run dev
 ```
 
-После запуска в терминале появляются две строки: сообщение
-о подключении к MongoDB и адрес сервера, по умолчанию
-http://localhost:5000.
+### Команды
 
-Наполнение базы восемью спикерами из клиентского приложения:
+| Команда | Что делает |
+|---|---|
+| `npm run local` | MongoDB и сервер одной командой, без Docker |
+| `npm run dev` | сервер с перезапуском при правках (nodemon) |
+| `npm start` | обычный запуск сервера |
+| `npm run seed` | очистить коллекцию и записать восемь спикеров |
+| `npm run seed:clear` | только очистить коллекцию |
 
-```bash
-npm run seed          # очистить коллекцию и записать демонстрационные данные
-npm run seed:clear    # только очистить коллекцию
-```
+После запуска сервер отвечает по адресу http://localhost:5000.
 
 ## Схема данных
 
@@ -147,7 +209,10 @@ devconf-api/
 ├── controllers/speakerController.js  логика CRUD-операций
 ├── routes/speakerRoutes.js        маршруты /api/speakers
 ├── middleware/errorHandler.js     обработка ошибок и несуществующих адресов
+├── data/speakers.js               демонстрационные спикеры
 ├── scripts/seed.js                наполнение базы демонстрационными данными
+├── scripts/local.js               запуск MongoDB и сервера без Docker
+├── docker-compose.yml             MongoDB и сервер в контейнерах
 ├── postman/                       коллекция запросов для Postman
 └── .env.example                   образец файла настроек
 ```
